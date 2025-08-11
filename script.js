@@ -2,6 +2,19 @@ $(document).ready(function() {
     let basketCount = 0;
     let products = [];
 
+    function loadBasket() {
+        const savedBasket = JSON.parse(localStorage.getItem("basket")) || [];
+        products = savedBasket;
+
+        basketCount = products.length;
+        $('#basket-count').text(basketCount);
+    }
+    function saveBasket() {
+        localStorage.setItem("basket", JSON.stringify(products));
+    }
+
+    loadBasket();
+
     toastr.options = {
         "closeButton": true,
         "progressBar": true,
@@ -14,15 +27,28 @@ $(document).ready(function() {
         const productId = card.attr('id');
         const productName = card.find('.card-title').text();
         const productPrice = card.find('.card-text').text();
+        const productImg = card.find('img').attr('src');
 
-        products.push({
-            id: productId,
-            name: productName,
-            price: productPrice
-        });
+      
+        const existingProductIndex = products.findIndex(product => product.id === productId);
+        
+        if (existingProductIndex !== -1) {
+          
+            products[existingProductIndex].count++;
+        } else {
+      
+            products.push({
+                id: productId,
+                title: productName,
+                price: productPrice,
+                imgSrc: productImg,
+                count: 1
+            });
+            basketCount++;
+        }
 
-        basketCount++;
         $('#basket-count').text(basketCount);
+        saveBasket();
 
         toastr.success(`${productName} added to cart!`);
 
@@ -45,7 +71,7 @@ $(document).ready(function() {
 
         let productList = '';
         products.forEach(product => {
-            productList += `${product.name} - ${product.price}<br>`;
+            productList += `${product.title} x${product.count} - ${product.price}<br>`;
         });
 
         Swal.fire({
@@ -53,19 +79,11 @@ $(document).ready(function() {
             html: productList,
             icon: 'success',
             showCancelButton: true,
-            confirmButtonText: 'Purchase',
+            confirmButtonText: 'Go to Basket',
             cancelButtonText: 'Close'
         }).then((result) => {
             if (result.isConfirmed) {
-                Swal.fire({
-                    title: 'Thank You!',
-                    text: 'Your order has been received.',
-                    icon: 'success',
-                    confirmButtonText: 'OK'
-                });
-                products = [];
-                basketCount = 0;
-                $('#basket-count').text('0');
+                window.location.href = 'basket.html';
             }
         });
     });
