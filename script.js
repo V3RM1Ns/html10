@@ -1,24 +1,72 @@
-const basket = JSON.parse(localStorage.getItem("basket")) || [];
-const basketSub = document.getElementById("basket-count");
-const basketIcon = document.getElementById("basket-icon");
+$(document).ready(function() {
+    let basketCount = 0;
+    let products = [];
 
-basketSub.innerText = basket.length;
+    toastr.options = {
+        "closeButton": true,
+        "progressBar": true,
+        "positionClass": "toast-bottom-right",
+        "timeOut": "2000"
+    };
 
-document.querySelectorAll(".btn-primary").forEach(button => {
-    button.addEventListener("click", (e) => {
-        const card = e.target.closest(".card");
-        const id = card.id;
-        const title = card.querySelector(".card-title").innerText;
-        const price = card.querySelector(".card-text").innerText;
-        const imgSrc = card.querySelector("img").src;
+    $('.btn-primary').click(function() {
+        const card = $(this).closest('.card');
+        const productId = card.attr('id');
+        const productName = card.find('.card-title').text();
+        const productPrice = card.find('.card-text').text();
 
-        basket.push({ id, title, price, imgSrc });
+        products.push({
+            id: productId,
+            name: productName,
+            price: productPrice
+        });
 
-        localStorage.setItem("basket", JSON.stringify(basket));
-        basketSub.innerText = basket.length;
+        basketCount++;
+        $('#basket-count').text(basketCount);
+
+        toastr.success(`${productName} added to cart!`);
+
+        $(this).removeClass('btn-primary').addClass('btn-success');
+        setTimeout(() => {
+            $(this).removeClass('btn-success').addClass('btn-primary');
+        }, 1000);
     });
-});
 
-basketIcon.addEventListener("click", () => {
-    window.location.href = "basket.html";
+    $('#basket-icon').click(function() {
+        if (products.length === 0) {
+            Swal.fire({
+                title: 'Empty Cart',
+                text: 'Your cart is empty',
+                icon: 'info',
+                confirmButtonText: 'OK'
+            });
+            return;
+        }
+
+        let productList = '';
+        products.forEach(product => {
+            productList += `${product.name} - ${product.price}<br>`;
+        });
+
+        Swal.fire({
+            title: 'Your Cart',
+            html: productList,
+            icon: 'success',
+            showCancelButton: true,
+            confirmButtonText: 'Purchase',
+            cancelButtonText: 'Close'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                Swal.fire({
+                    title: 'Thank You!',
+                    text: 'Your order has been received.',
+                    icon: 'success',
+                    confirmButtonText: 'OK'
+                });
+                products = [];
+                basketCount = 0;
+                $('#basket-count').text('0');
+            }
+        });
+    });
 });
